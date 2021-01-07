@@ -1,0 +1,125 @@
+#include <LiquidCrystal.h>
+#include <EEPROM.h>
+
+
+#define pinSIRENA 3
+#define PIN_POTENZIOMETRO 4
+#define PIN_INTERRUTTORE 12
+
+
+int pin_pir [] = {2, 11};
+LiquidCrystal lcd(5, 6, 7, 8, 9, 10);
+
+
+int status_pir_1, status_pir_2 = 0;
+int punteggio;
+int shot_type;
+
+void setup()
+{
+  /*Setup debugger*/
+  	Serial.begin(9600);
+  
+  /*Setup LCD*/
+  	analogWrite(PIN_POTENZIOMETRO, 0); 
+  	lcd.begin(16,2);
+  	lcd.setCursor(0,0);
+	
+  /*Setup sensori pir, pulsante, sirena*/
+  for(int i=0; i<2; i++) 
+      {
+  		pinMode(pin_pir[i], INPUT);
+      }
+
+  	pinMode(PIN_INTERRUTTORE,INPUT);
+  	pinMode(pinSIRENA, OUTPUT);
+  
+    
+}
+
+void loop()
+{
+	lcd.print("PUNTEGGIO: ");
+   	lcd.print(punteggio);
+  	lcd.setCursor(0,2);
+  	//lcd.print("MAX-SCORE: ");
+  	//lcd.print(punteggio_max);
+  
+  	/*Controllo tipologia tiro*/
+  	shot_type = digitalRead(PIN_INTERRUTTORE);
+  	
+      
+  
+  	status_pir_1 = digitalRead(pin_pir[0]);
+  	delay(1000); //[2]
+  	status_pir_2 = digitalRead(pin_pir[1]);
+  
+	
+  if(check_to_score(status_pir_1, status_pir_2))
+     {
+      	addBucket(shot_type);
+      	soundSirena();
+     }
+     
+  delay(1000);
+  Serial.print("Punteggio: ");Serial.println(punteggio);
+  lcd.clear();
+}
+
+
+
+
+
+
+// F U N Z I O N I
+
+
+/*Controlla che sia avvenuto il canestro*/ //[1]
+int check_to_score(int sensore_1, int sensore_2)
+{
+	if(sensore_1)
+    {
+      if(sensore_2)
+    	{
+    		Serial.println("Score!");
+      		return 1;
+    	}
+    }
+  	else
+    {
+  		return 0;
+  	}
+}
+
+/*Aggiunge il punteggio*/
+void addBucket(int type)
+{
+	if(type==1)
+	  	punteggio = punteggio + 2;
+  	if(type==0)
+      	punteggio = punteggio + 3;
+}
+
+/*Suono della sirena*/
+void soundSirena()
+{
+	tone(pinSIRENA, 470);
+  	delay(1000);
+  	noTone(pinSIRENA);
+  	/*tone(pinSIRENA, 6);
+  	delay(600);
+  	noTone(pinSIRENA);*/
+}
+
+
+/*NOTE
+
+[1]
+Il canestro è valido SOLO SE si attiva il primo sensore e successivamente
+il secondo, questo perché il primo identifica la palla che entra nel canestro
+e il secondo certifica che la palla ha superato la retina
+
+[2]
+È un delay che consente alla palla di attraversare la retina 
+e scendere lungo il palo in cui è posto il secondo sensore
+*/
