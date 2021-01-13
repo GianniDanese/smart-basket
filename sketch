@@ -45,9 +45,14 @@ void loop()
   	//lcd.print("MAX-SCORE: ");
   	//lcd.print(punteggio_max);
   
-  	/*Controllo tipologia tiro*/
+  	/*Controllo e stampa tipologia tiro*/
   	shot_type = digitalRead(PIN_INTERRUTTORE);
-  	
+  
+  	lcd.print("Tiro da");
+  	if(shot_type == 1)
+      lcd.print(" due");
+  	else
+      lcd.print(" tre");
       
   
   	status_pir_1 = digitalRead(pin_pir[0]);
@@ -82,6 +87,8 @@ int check_to_score(int sensore_1, int sensore_2)
       if(sensore_2)
     	{
     		Serial.println("Score!");
+        	lcd.clear();
+        	lcd.print("CANESTRO!!!!!");
       		return 1;
     	}
     }
